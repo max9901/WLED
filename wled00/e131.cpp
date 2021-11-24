@@ -74,6 +74,7 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
     return;
   }
 
+
   #ifdef WLED_ENABLE_DMX
   // does not act on out-of-order packets yet
   if (e131ProxyUniverse > 0 && uni == e131ProxyUniverse) {
@@ -202,6 +203,75 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
         }
         break;
       }
+
+    case DMX_MODE_SEGMENT_EFFECT:
+    {  
+
+
+      // TODO go for directly writing to the segments~! only trigger if 
+      transitionDelayTemp = 0;
+      byte mainSegmentId = strip.getMainSegmentId(); 
+      byte maxSegmentId = 0;
+      WS2812FX::Segment* segments = strip.getSegments();
+
+      for (int i = 0; i < MAX_NUM_SEGMENTS; i++, segments++) {
+        if (!segments->isActive()) {
+          maxSegmentId = i - 1;
+          break;
+        }
+
+        //select segment!
+        segments->setOption(SEG_OPTION_SELECTED,true);
+
+        // do the segment
+        auto DMXAddresspointer = DMXAddress + 13*i;
+        if (uni != e131Universe) return;
+        if (dmxChannels-DMXAddresspointer+1 < 11) return;
+
+        //This is quite .... because it turns of the LIGHT when done on the default strip
+        // TODO SET DIRECTLY BRIGHTNESS OF SEGMENT
+        if (DMXOldDimmer != e131_data[DMXAddresspointer+0]) {
+            DMXOldDimmer = e131_data[DMXAddresspointer+0];
+            bri = e131_data[DMXAddresspointer+0];
+        }
+
+        if (e131_data[DMXAddresspointer+1] < MODE_COUNT){
+          effectCurrent = e131_data[DMXAddresspointer+ 1];
+          effectChanged = true;
+        }
+
+        effectSpeed     = e131_data[DMXAddresspointer+ 2];  // flickers
+        effectIntensity = e131_data[DMXAddresspointer+ 3];
+        effectPalette   = e131_data[DMXAddresspointer+ 4];
+        
+        col[0]          = e131_data[DMXAddresspointer+ 5];
+        col[1]          = e131_data[DMXAddresspointer+ 6];
+        col[2]          = e131_data[DMXAddresspointer+ 7];
+        colSec[0]       = e131_data[DMXAddresspointer+ 8];
+        colSec[1]       = e131_data[DMXAddresspointer+ 9];
+        colSec[2]       = e131_data[DMXAddresspointer+10];
+        if (dmxChannels-DMXAddresspointer+1 > 11)
+        {
+          col[3]        = e131_data[DMXAddresspointer+11]; //white
+          colSec[3]     = e131_data[DMXAddresspointer+12];
+        }
+
+        // otherwise no colour change is detected between strips :(
+          // Fix dit want nu teveel updates Als main segment dan doe gwn colour setten, als niet main segment dan direct het segment zetten !!
+        colIT[0]  = 0;        colIT[1]  = 0;        colIT[2]  = 0;        colIT[3]  = 0;
+        colSecIT[0]  = 0;        colSecIT[1]  = 0;        colSecIT[2]  = 0;        colSecIT[3]  = 0;
+
+        //update the strip 
+        colorUpdated(CALL_MODE_NOTIFICATION);
+
+        //clear segment selection
+        segments->setOption(SEG_OPTION_SELECTED,false);
+      }
+      
+      //optional todo restore the segment selection
+      break;    // Activate realtime mode :D 
+    }
+
     default:
       DEBUG_PRINTLN(F("unknown E1.31 DMX mode"));
       return;  // nothing to do
