@@ -207,7 +207,6 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
     case DMX_MODE_SEGMENT_EFFECT:
     {  
 
-
       // TODO go for directly writing to the segments~! only trigger if 
       transitionDelayTemp = 0;
       byte mainSegmentId = strip.getMainSegmentId(); 
@@ -215,6 +214,16 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
       WS2812FX::Segment* segments = strip.getSegments();
 
       for (int i = 0; i < MAX_NUM_SEGMENTS; i++, segments++) {
+        
+        // do the segment
+        auto DMXAddresspointer = DMXAddress + 14*i;
+        if (uni != e131Universe) return;
+        if (dmxChannels-DMXAddresspointer+1 < 11) return;
+
+        if (e131_data[DMXAddresspointer+13]){
+          continue;
+        }
+
         if (!segments->isActive()) {
           maxSegmentId = i - 1;
           break;
@@ -222,11 +231,6 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
 
         //select segment!
         segments->setOption(SEG_OPTION_SELECTED,true);
-
-        // do the segment
-        auto DMXAddresspointer = DMXAddress + 13*i;
-        if (uni != e131Universe) return;
-        if (dmxChannels-DMXAddresspointer+1 < 11) return;
 
         //This is quite .... because it turns of the LIGHT when done on the default strip
         // TODO SET DIRECTLY BRIGHTNESS OF SEGMENT
@@ -255,7 +259,7 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
           col[3]        = e131_data[DMXAddresspointer+11]; //white
           colSec[3]     = e131_data[DMXAddresspointer+12];
         }
-
+        
         // otherwise no colour change is detected between strips :(
           // Fix dit want nu teveel updates Als main segment dan doe gwn colour setten, als niet main segment dan direct het segment zetten !!
         colIT[0]  = 0;        colIT[1]  = 0;        colIT[2]  = 0;        colIT[3]  = 0;
@@ -266,6 +270,7 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
 
         //clear segment selection
         segments->setOption(SEG_OPTION_SELECTED,false);
+
       }
       
       //optional todo restore the segment selection
