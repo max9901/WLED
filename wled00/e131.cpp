@@ -214,21 +214,19 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
       WS2812FX::Segment* segments = strip.getSegments();
 
       for (int i = 0; i < MAX_NUM_SEGMENTS; i++, segments++) {
-        
-        // do the segment
-        auto DMXAddresspointer = DMXAddress + 14*i;
-        if (uni != e131Universe) return;
-        if (dmxChannels-DMXAddresspointer+1 < 11) return;
-
-        if (e131_data[DMXAddresspointer+13]){
-          continue;
-        }
 
         if (!segments->isActive()) {
           maxSegmentId = i - 1;
           break;
         }
 
+        // do the segment
+        auto DMXAddresspointer = DMXAddress + 14*i;
+        if (uni != e131Universe) return;
+        if (dmxChannels-DMXAddresspointer+1 < 11) return;
+
+        segments->hidden = e131_data[DMXAddresspointer+13];
+                
         //select segment!
         segments->setOption(SEG_OPTION_SELECTED,true);
 
@@ -244,7 +242,7 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
           effectChanged = true;
         }
 
-        effectSpeed     = e131_data[DMXAddresspointer+ 2];  // flickers
+        effectSpeed     = e131_data[DMXAddresspointer+ 2]; 
         effectIntensity = e131_data[DMXAddresspointer+ 3];
         effectPalette   = e131_data[DMXAddresspointer+ 4];
         
@@ -261,9 +259,9 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
         }
         
         // otherwise no colour change is detected between strips :(
-          // Fix dit want nu teveel updates Als main segment dan doe gwn colour setten, als niet main segment dan direct het segment zetten !!
+        // Fix dit want nu teveel updates Als main segment dan doe gwn colour setten, als niet main segment dan direct het segment zetten !!
         colIT[0]  = 0;        colIT[1]  = 0;        colIT[2]  = 0;        colIT[3]  = 0;
-        colSecIT[0]  = 0;        colSecIT[1]  = 0;        colSecIT[2]  = 0;        colSecIT[3]  = 0;
+        colSecIT[0]  = 0;     colSecIT[1]  = 0;     colSecIT[2]  = 0;     colSecIT[3]  = 0;
 
         //update the strip 
         colorUpdated(CALL_MODE_NOTIFICATION);
