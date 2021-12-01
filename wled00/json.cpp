@@ -512,6 +512,20 @@ void serializeInfo(JsonObject root)
   root["live"] = (bool)realtimeMode;
   root["dmx_mode"] = DMXMode;
 
+  JsonObject dmx_info = root.createNestedObject("DMX");
+  switch (DMXMode) {
+    case DMX_MODE_DISABLED     : dmx_info["mode"] = "DMX_MODE_DISABLED"; break;
+    case DMX_MODE_SINGLE_RGB   : dmx_info["mode"] = "DMX_MODE_SINGLE_RGB"; break;
+    case DMX_MODE_SINGLE_DRGB  : dmx_info["mode"] = "DMX_MODE_SINGLE_DRGB"; break;
+    case DMX_MODE_EFFECT       : dmx_info["mode"] = "DMX_MODE_EFFECT"; break;
+    case DMX_MODE_MULTIPLE_RGB : dmx_info["mode"] = "DMX_MODE_MULTIPLE_RGB"; break;
+    case DMX_MODE_MULTIPLE_DRGB: dmx_info["mode"] = "DMX_MODE_MULTIPLE_DRGB"; break;
+    case DMX_MODE_MULTIPLE_RGBW: dmx_info["mode"] = "DMX_MODE_MULTIPLE_RGBW"; break;
+  }  
+  dmx_info["address"] = DMXAddress;
+  dmx_info["e131Port"] = e131Port;
+  dmx_info["e131Multicast"] = e131Multicast;
+
   switch (realtimeMode) {
     case REALTIME_MODE_INACTIVE: root["lm"] = ""; break;
     case REALTIME_MODE_GENERIC:  root["lm"] = ""; break;
