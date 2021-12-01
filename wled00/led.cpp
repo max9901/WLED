@@ -94,6 +94,17 @@ void colorUpdated(int callMode)
 
   bool someSel = false;
 
+  //TODO this is not that nice get's called to often
+  if (callMode != CALL_MODE_DMX_MULTI_SEG){
+      WS2812FX::Segment* segments = strip.getSegments();
+      for (int i = 0; i < MAX_NUM_SEGMENTS; i++, segments++) {
+        if (!segments->isActive()) {
+          segments->hidden = false;   
+          break;
+        }
+      }
+  }
+
   if (callMode == CALL_MODE_NOTIFICATION) {
     someSel = (receiveNotificationBrightness || receiveNotificationColor || receiveNotificationEffects);
   }

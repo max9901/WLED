@@ -264,7 +264,7 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
         colSecIT[0]  = 0;     colSecIT[1]  = 0;     colSecIT[2]  = 0;     colSecIT[3]  = 0;
 
         //update the strip 
-        colorUpdated(CALL_MODE_NOTIFICATION);
+        colorUpdated(CALL_MODE_DMX_MULTI_SEG);
 
         //clear segment selection
         segments->setOption(SEG_OPTION_SELECTED,false);
