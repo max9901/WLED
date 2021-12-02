@@ -225,8 +225,13 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
         if (uni != e131Universe) return;
         if (dmxChannels-DMXAddresspointer+1 < 11) return;
 
+
+        // TODO 
         segments->hidden = e131_data[DMXAddresspointer+13];
-                
+        if(e131_data[DMXAddresspointer+13]){
+          continue;
+        }
+
         //select segment!
         segments->setOption(SEG_OPTION_SELECTED,true);
 
