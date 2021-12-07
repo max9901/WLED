@@ -114,6 +114,10 @@ void colorUpdated(int callMode)
 
   bool fxChanged = strip.setEffectConfig(effectCurrent, effectSpeed, effectIntensity, effectPalette) || effectChanged;
   bool colChanged = colorChanged();
+  if (callMode == CALL_MODE_DMX_MULTI_SEG){
+    colChanged = true;
+    fxChanged = true;
+  }
 
   //Notifier: apply received color to selected segments only if actually receiving color
   if (someSel) strip.applyToAllSelected = receiveNotificationColor;
