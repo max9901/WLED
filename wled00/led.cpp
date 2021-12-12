@@ -115,6 +115,7 @@ void colorUpdated(int callMode)
   bool fxChanged = strip.setEffectConfig(effectCurrent, effectSpeed, effectIntensity, effectPalette) || effectChanged;
   bool colChanged = colorChanged();
   if (callMode == CALL_MODE_DMX_MULTI_SEG){
+    //please add checks here!!
     colChanged = true;
     fxChanged = true;
   }
