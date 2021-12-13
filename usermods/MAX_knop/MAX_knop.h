@@ -9,6 +9,7 @@
 #define USER_WLED_LONG_REPEATED_ACTION 300 //how often a repeated action (e.g. dimming) is fired on long press on button IDs >0
 #define USER_WLED_LONG_AP 6000             //how long the button needs to be held to activate WLED-AP
 #define REDPIN 19
+#define RESETTIME 300 * 1000  //(300 sec - 5 min)
 
 IPAddress serverIP(192, 168, 2, 16);
 const int kNetworkTimeout = 30 * 1000;
@@ -20,6 +21,9 @@ class MaxKnop : public Usermod
 private:
   //Private class members. You can declare variables and functions only accessible to your usermod here
   unsigned long lastTime = 0;
+  unsigned long Red_button_timer = 0;
+  bool checklight = false;
+  
   bool effect_on = false;
   std::deque<byte> strip1 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
@@ -39,6 +43,13 @@ public:
 
   void loop()
   {
+    if (checklight && millis() - Red_button_timer > RESETTIME){
+      Serial.println("timer reset");
+      checklight = false;
+      col[3] = 255;
+      colorUpdated(CALL_MODE_NOTIFICATION);
+    }
+
     // 20 fps
     if (millis() - lastTime > 15)
     {
@@ -46,8 +57,7 @@ public:
       if (effect_on)
       {
         //toggle the button
-        digitalWrite(REDPIN, false);
-
+        
         //pop 1 pixel
         strip1.pop_back();
 
@@ -76,17 +86,28 @@ public:
         effect_on = false;
         
       }
-      else
-      {
-        digitalWrite(REDPIN, true);
-      }
     }
 
   }
   void handleOverlayDraw()
   {
+
+    //fix that we can change it in the ui with the white channel
+    if((strip.getPixelColor(0)>>25)){
+      digitalWrite(REDPIN, true);
+    }else{
+      digitalWrite(REDPIN, false);
+    }
+
     if (effect_on){
-        for (int i = 0; i < 55; i++)
+        Serial.print(",");
+        checklight = true;
+        digitalWrite(REDPIN, false);
+        
+        //1 pixel offset because the first pixel is the red button
+        col[3] = 0;
+        colorUpdated(CALL_MODE_NOTIFICATION);
+        for (int i = 0+1; i < 55+1; i++)
         {
           strip.setPixelColor(i     , ((strip1[i]<<16) + (strip1[i]<<8) + (strip1[i]) ));
           strip.setPixelColor(i + 55, ((strip1[i]<<16) + (strip1[i]<<8) + (strip1[i]) ));
@@ -100,7 +121,9 @@ public:
     {
       newpress = 5;
       effect_on = true;
-      // shortPressAction();
+
+      //turn off button.
+      Red_button_timer = millis();
     }
     //networking
     {

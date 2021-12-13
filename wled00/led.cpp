@@ -86,22 +86,23 @@ bool colorChanged()
 
 void colorUpdated(int callMode)
 {
+
+  Serial.println("colorUpdated");
   //call for notifier -> 0: init 1: direct change 2: button 3: notification 4: nightlight 5: other (No notification)
   //                     6: fx changed 7: hue 8: preset cycle 9: blynk 10: alexa
   if (callMode != CALL_MODE_INIT && 
       callMode != CALL_MODE_DIRECT_CHANGE && 
-      callMode != CALL_MODE_NO_NOTIFY) strip.applyToAllSelected = true; //if not from JSON api, which directly sets segments
+      callMode != CALL_MODE_NO_NOTIFY && 
+      callMode != CALL_MODE_DMX_MULTI_SEG) strip.applyToAllSelected = true; //if not from JSON api, which directly sets segments
+      //todo fix this later for dmx multi SEG
 
   bool someSel = false;
 
   //TODO this is not that nice get's called to often
   if (callMode != CALL_MODE_DMX_MULTI_SEG){
       WS2812FX::Segment* segments = strip.getSegments();
-      for (int i = 0; i < MAX_NUM_SEGMENTS; i++, segments++) {
-        if (!segments->isActive()) {
-          segments->hidden = false;   
-          break;
-        }
+      for (int i = 0; i < MAX_NUM_SEGMENTS; i++) {
+          segments[i].hidden = false;   
       }
   }
 
@@ -114,8 +115,8 @@ void colorUpdated(int callMode)
 
   bool fxChanged = strip.setEffectConfig(effectCurrent, effectSpeed, effectIntensity, effectPalette) || effectChanged;
   bool colChanged = colorChanged();
+
   if (callMode == CALL_MODE_DMX_MULTI_SEG){
-    //please add checks here!!
     colChanged = true;
     fxChanged = true;
   }
