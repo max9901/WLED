@@ -8,8 +8,8 @@
 #define USER_WLED_DOUBLE_PRESS 350         //double press if another press within 350ms after a short press
 #define USER_WLED_LONG_REPEATED_ACTION 300 //how often a repeated action (e.g. dimming) is fired on long press on button IDs >0
 #define USER_WLED_LONG_AP 6000             //how long the button needs to be held to activate WLED-AP
-#define REDPIN 19
-#define RESETTIME 300 * 1000  //(300 sec - 5 min)
+#define REDPIN 26
+#define RESETTIME 360 * 1000  //(360 sec - 6 min)
 
 IPAddress serverIP(192, 168, 2, 16);
 const int kNetworkTimeout = 30 * 1000;
@@ -37,7 +37,7 @@ public:
 
   void setup()
   {
-    Serial.println("Hello from my usermod!");
+    Serial.println("Hello starLED KNOP reporting!");
     pinMode(REDPIN, OUTPUT);
   }
 
@@ -46,8 +46,13 @@ public:
     if (checklight && millis() - Red_button_timer > RESETTIME){
       Serial.println("timer reset");
       checklight = false;
-      col[3] = 255;
-      colorUpdated(CALL_MODE_NOTIFICATION);
+
+      WS2812FX::Segment& seg =   strip.getSegment(1);
+      seg.setOption(SEG_OPTION_ON, 1, 1);
+      seg.setOption(SEG_OPTION_SELECTED, 1, 1);
+      seg.setColor(0, 255, 1);
+      colorUpdated(CALL_MODE_DIRECT_CHANGE);
+
     }
 
     // 20 fps
@@ -83,35 +88,53 @@ public:
           if (strip1[i])
             return;
         }
+
+        //end with the segments off.
+
+        WS2812FX::Segment* segments = strip.getSegments();
+        for (int i = 0; i < MAX_NUM_SEGMENTS; i++, segments++) {
+          if (!segments->isActive()) {
+            break;
+          }
+          col[0]          = 0;
+          col[1]          = 0;
+          col[2]          = 0;
+          colSec[0]       = 0;
+          colSec[1]       = 0;
+          colSec[2]       = 0;
+          col[3]          = 0;
+          colSec[3]       = 0;
+          segments->setOption(SEG_OPTION_SELECTED,true);
+          colorUpdated(CALL_MODE_DMX_MULTI_SEG);
+          //clear segment selection
+          segments->setOption(SEG_OPTION_SELECTED,false);
+        }
         effect_on = false;
-        
       }
     }
 
   }
+
   void handleOverlayDraw()
   {
-
     //fix that we can change it in the ui with the white channel
-    if((strip.getPixelColor(0)>>25)){
+    if((busses.getPixelColor(0))){
       digitalWrite(REDPIN, true);
     }else{
       digitalWrite(REDPIN, false);
     }
 
     if (effect_on){
-        Serial.print(",");
         checklight = true;
         digitalWrite(REDPIN, false);
         
         //1 pixel offset because the first pixel is the red button
-        col[3] = 0;
-        colorUpdated(CALL_MODE_NOTIFICATION);
         for (int i = 0+1; i < 55+1; i++)
         {
           strip.setPixelColor(i     , ((strip1[i]<<16) + (strip1[i]<<8) + (strip1[i]) ));
           strip.setPixelColor(i + 55, ((strip1[i]<<16) + (strip1[i]<<8) + (strip1[i]) ));
         }
+        colorUpdated(CALL_MODE_BUTTON);
       }
   }
 
@@ -121,6 +144,13 @@ public:
     {
       newpress = 5;
       effect_on = true;
+
+      //reset the segements toch
+      WS2812FX::Segment& seg =   strip.getSegment(1);
+      seg.setOption(SEG_OPTION_ON, 1, 1);
+      seg.setOption(SEG_OPTION_SELECTED, 1, 1);
+      seg.setColor(0, 0, 1);
+      colorUpdated(CALL_MODE_DIRECT_CHANGE);
 
       //turn off button.
       Red_button_timer = millis();

@@ -208,7 +208,6 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
     {  
 
       // TODO go for directly writing to the segments~! only trigger if 
-      Serial.println("hit");
       transitionDelayTemp = 0;
       byte mainSegmentId = strip.getMainSegmentId(); 
       byte maxSegmentId = 0;
@@ -221,7 +220,7 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
           break;
         }
         
-        Serial.println(i);
+
         // do the segment
         auto DMXAddresspointer = DMXAddress + 14*i;
         if (uni != e131Universe) return;
@@ -263,14 +262,15 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
         {
           col[3]        = e131_data[DMXAddresspointer+11]; //white
           colSec[3]     = e131_data[DMXAddresspointer+12];
-          Serial.println(col[3]);
         }
         
         //this  does not work.. way we cannot set it to black .....
         // otherwise no colour change is detected between strips :(
         // Fix dit want nu teveel updates Als main segment dan doe gwn colour setten, als niet main segment dan direct het segment zetten !!
-        colIT[0]  = 0;        colIT[1]  = 0;        colIT[2]  = 0;        colIT[3]  = 0;
-        colSecIT[0]  = 0;     colSecIT[1]  = 0;     colSecIT[2]  = 0;     colSecIT[3]  = 0;
+        // WS2812FX::Segment& seg =   strip.getSegment(1);
+        // seg.setColor(0, 0, 1);
+        // colIT[0]  = 0;        colIT[1]  = 0;        colIT[2]  = 0;        colIT[3]  = 0;
+        // colSecIT[0]  = 0;     colSecIT[1]  = 0;     colSecIT[2]  = 0;     colSecIT[3]  = 0;
 
         //update the strip 
         colorUpdated(CALL_MODE_DMX_MULTI_SEG);

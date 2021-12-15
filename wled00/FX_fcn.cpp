@@ -542,6 +542,7 @@ uint32_t WS2812FX::getPixelColor(uint16_t i)
 
 WS2812FX::Segment& WS2812FX::getSegment(uint8_t id) {
   if (id >= MAX_NUM_SEGMENTS) return _segments[0];
+  Serial.println(id);
   return _segments[id];
 }
 
