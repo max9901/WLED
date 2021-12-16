@@ -92,9 +92,10 @@ void colorUpdated(int callMode)
   //                     6: fx changed 7: hue 8: preset cycle 9: blynk 10: alexa
   if (callMode != CALL_MODE_INIT && 
       callMode != CALL_MODE_DIRECT_CHANGE && 
-      callMode != CALL_MODE_NO_NOTIFY && 
-      callMode != CALL_MODE_DMX_MULTI_SEG) strip.applyToAllSelected = true; //if not from JSON api, which directly sets segments
+      callMode != CALL_MODE_NO_NOTIFY) strip.applyToAllSelected = true; //if not from JSON api, which directly sets segments
       //todo fix this later for dmx multi SEG
+      // && 
+      // callMode != CALL_MODE_DMX_MULTI_SEG
 
   bool someSel = false;
 

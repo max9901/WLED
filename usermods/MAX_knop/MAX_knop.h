@@ -11,7 +11,7 @@
 #define REDPIN 26
 #define RESETTIME 360 * 1000  //(360 sec - 6 min)
 
-IPAddress serverIP(192, 168, 2, 16);
+IPAddress serverIP(192, 168, 2, 19);
 const int kNetworkTimeout = 30 * 1000;
 const int kNetworkDelay = 1000;
 
@@ -78,7 +78,7 @@ public:
         {
           strip1.push_front(0);
         }
-        
+
         //show the effect 
         strip.show();
 
@@ -90,12 +90,16 @@ public:
         }
 
         //end with the segments off.
+        DEBUG_PRINTLN("turn strips off");
 
         WS2812FX::Segment* segments = strip.getSegments();
         for (int i = 0; i < MAX_NUM_SEGMENTS; i++, segments++) {
           if (!segments->isActive()) {
             break;
           }
+          segments->setOption(SEG_OPTION_ON, 1, i);
+          segments->setOption(SEG_OPTION_SELECTED, 1, i);
+          segments->setColor(0, 0, i);
           col[0]          = 0;
           col[1]          = 0;
           col[2]          = 0;
@@ -104,10 +108,8 @@ public:
           colSec[2]       = 0;
           col[3]          = 0;
           colSec[3]       = 0;
-          segments->setOption(SEG_OPTION_SELECTED,true);
-          colorUpdated(CALL_MODE_DMX_MULTI_SEG);
-          //clear segment selection
-          segments->setOption(SEG_OPTION_SELECTED,false);
+          colorUpdated(CALL_MODE_DIRECT_CHANGE);
+          DEBUG_PRINTLN(i);
         }
         effect_on = false;
       }
@@ -140,6 +142,7 @@ public:
 
   void ShortPress()
   {
+    DEBUG_PRINTLN("button is pressed");
     //pixel action
     {
       newpress = 5;
@@ -159,7 +162,7 @@ public:
     {
       if (Network.isConnected())
       {
-
+        DEBUG_PRINTLN("start connect to server");
         WiFiClient client;
         if (client.connect(serverIP, 8000))
         {
