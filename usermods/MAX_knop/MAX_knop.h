@@ -8,8 +8,8 @@
 #define USER_WLED_DOUBLE_PRESS 350         //double press if another press within 350ms after a short press
 #define USER_WLED_LONG_REPEATED_ACTION 300 //how often a repeated action (e.g. dimming) is fired on long press on button IDs >0
 #define USER_WLED_LONG_AP 6000             //how long the button needs to be held to activate WLED-AP
-#define REDPIN 26
-#define RESETTIME 225 * 1000  //(360 sec - 6 min)
+#define REDPIN 19
+#define RESETTIME 225 * 1000  //()
 
 IPAddress serverIP(192, 168, 0, 101);
 const int kNetworkTimeout = 30 * 1000;
@@ -180,12 +180,13 @@ public:
       }
     }
   }
+
   void LongPress()
   {
-    longPressAction();
+    ShortPress();
   }
   void DoublePress(){
-    doublePressAction();
+    ShortPress();
   }
 
   bool handleButton(uint8_t b){
