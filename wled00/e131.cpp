@@ -54,6 +54,8 @@ void handleDDPPacket(e131_packet_t* p) {
 //E1.31 and Art-Net protocol support
 void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
 
+  DEBUG_PRINTLN("receiving dmx packages! ");
+  
   uint16_t uni = 0, dmxChannels = 0;
   uint8_t* e131_data = nullptr;
   uint8_t seq = 0, mde = REALTIME_MODE_E131;
@@ -127,6 +129,8 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
     dataOffset--;
   }
 
+  uint16_t dmxPointer = dataOffset;
+
   switch (DMXMode) {
     case DMX_MODE_DISABLED:
       return;  // nothing to do
@@ -143,6 +147,38 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
       wChannel = (availDMXLen > 3) ? e131_data[dataOffset+3] : 0;
       for (uint16_t i = 0; i < totalLen; i++)
         setRealtimePixel(i, e131_data[dataOffset+0], e131_data[dataOffset+1], e131_data[dataOffset+2], wChannel);
+      break;
+    
+    case DMX_MODE_SEGMENTS_RGB:
+      DEBUG_PRINTLN("DMX_MODE_SEGMENTS_RGB");
+      DEBUG_PRINTLN(strip.getSegmentsNum());
+
+      if (uni != e131Universe) return;  
+
+      if(strip.getSegmentsNum() >= availDMXLen/3){        //most programs will always use 512 dmx width!
+          DEBUG_PRINTLN("not enough data in dmx packet");
+          DEBUG_PRINTLN(availDMXLen);
+          break;
+      } 
+      
+      realtimeLock(realtimeTimeoutMs, mde);
+
+      if (realtimeOverride && !(realtimeMode && useMainSegmentOnly)) return;
+
+      
+      for(segment & seg : strip._segments){
+        if(seg.isActive()){   //seems to be always active when valid ? 
+          DEBUG_PRINT("Going for segment: ");
+          DEBUG_PRINTLN(dmxPointer/3);
+          seg.setOption(SEG_OPTION_SELECTED,true);  
+          seg.fill(RGBW32(e131_data[dmxPointer+0], e131_data[dmxPointer+1], e131_data[dmxPointer+2],0));
+          seg.setOption(SEG_OPTION_SELECTED,false); 
+        }else{
+          DEBUG_PRINT("Not a active segmetent!: ");
+          DEBUG_PRINTLN(dmxPointer/3);
+        }
+        dmxPointer += 3; 
+      }
       break;
 
     case DMX_MODE_SINGLE_DRGB: // Dimmer + RGB
