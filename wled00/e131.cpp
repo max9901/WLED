@@ -149,38 +149,6 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
         setRealtimePixel(i, e131_data[dataOffset+0], e131_data[dataOffset+1], e131_data[dataOffset+2], wChannel);
       break;
     
-    case DMX_MODE_SEGMENTS_RGB:
-      DEBUG_PRINTLN("DMX_MODE_SEGMENTS_RGB");
-      DEBUG_PRINTLN(strip.getSegmentsNum());
-
-      if (uni != e131Universe) return;  
-
-      if(strip.getSegmentsNum() >= availDMXLen/3){        //most programs will always use 512 dmx width!
-          DEBUG_PRINTLN("not enough data in dmx packet");
-          DEBUG_PRINTLN(availDMXLen);
-          break;
-      } 
-      
-      realtimeLock(realtimeTimeoutMs, mde);
-
-      if (realtimeOverride && !(realtimeMode && useMainSegmentOnly)) return;
-
-      
-      for(segment & seg : strip._segments){
-        if(seg.isActive()){   //seems to be always active when valid ? 
-          DEBUG_PRINT("Going for segment: ");
-          DEBUG_PRINTLN(dmxPointer/3);
-          seg.setOption(SEG_OPTION_SELECTED,true);  
-          seg.fill(RGBW32(e131_data[dmxPointer+0], e131_data[dmxPointer+1], e131_data[dmxPointer+2],0));
-          seg.setOption(SEG_OPTION_SELECTED,false); 
-        }else{
-          DEBUG_PRINT("Not a active segmetent!: ");
-          DEBUG_PRINTLN(dmxPointer/3);
-        }
-        dmxPointer += 3; 
-      }
-      break;
-
     case DMX_MODE_SINGLE_DRGB: // Dimmer + RGB
       if (uni != e131Universe) return;
       if (availDMXLen < 4) return;
@@ -292,6 +260,44 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
         }
         break;
       }
+    
+    case DMX_MODE_SEGMENTS_RGBW:
+    case DMX_MODE_SEGMENTS_DRGBW:
+    case DMX_MODE_SEGMENTS_RGB:
+    case DMX_MODE_SEGMENTS_DRGB:   
+
+      if (uni != e131Universe) return;  
+            
+      realtimeLock(realtimeTimeoutMs, mde);
+      if (realtimeOverride && !(realtimeMode && useMainSegmentOnly)) return;
+
+      if ((DMXMode == DMX_MODE_SEGMENTS_DRGB) |  (DMXMode == DMX_MODE_SEGMENTS_DRGBW)){
+          if (bri != e131_data[dataOffset+0]) {
+            bri = e131_data[dataOffset+0];
+            strip.setBrightness(bri, true);
+          }
+          dmxPointer++;
+      }
+      for(segment & seg : strip._segments){
+        if(seg.isActive()){   
+          seg.setOption(SEG_OPTION_SELECTED,true);  
+          if ((DMXMode == DMX_MODE_SEGMENTS_RGBW) |  (DMXMode == DMX_MODE_SEGMENTS_DRGBW)){
+            seg.fill(RGBW32(e131_data[dmxPointer+0], e131_data[dmxPointer+1], e131_data[dmxPointer+2],0));
+          }else{
+            seg.fill(RGBW32(e131_data[dmxPointer+0], e131_data[dmxPointer+1], e131_data[dmxPointer+2],e131_data[dmxPointer+3]));
+          }
+          seg.setOption(SEG_OPTION_SELECTED,false); 
+        }
+        if ((DMXMode == DMX_MODE_SEGMENTS_RGBW) |  (DMXMode == DMX_MODE_SEGMENTS_DRGBW)){
+          dmxPointer += 4; 
+        }else{
+          dmxPointer += 3; 
+        }
+      }
+      break;
+    
+    case DMX_MODE_SEGMENTS_EFFECT:  //TODO maybe by mx
+      DEBUG_PRINTLN(F("DMX_MODE_SEGMENTS_EFFECT TODO"));
     default:
       DEBUG_PRINTLN(F("unknown E1.31 DMX mode"));
       return;  // nothing to do

@@ -143,13 +143,20 @@
 
 //E1.31 DMX modes
 #define DMX_MODE_DISABLED         0            //not used
-#define DMX_MODE_SINGLE_RGB       1            //all LEDs same RGB color (3 channels)
+#define DMX_MODE_SINGLE_RGB       1            //all LEDs same RGB color (3 channels)                   
 #define DMX_MODE_SINGLE_DRGB      2            //all LEDs same RGB color and master dimmer (4 channels)
 #define DMX_MODE_EFFECT           3            //trigger standalone effects of WLED (11 channels)
 #define DMX_MODE_MULTIPLE_RGB     4            //every LED is addressed with its own RGB (ledCount * 3 channels)
 #define DMX_MODE_MULTIPLE_DRGB    5            //every LED is addressed with its own RGB and share a master dimmer (ledCount * 3 + 1 channels)
 #define DMX_MODE_MULTIPLE_RGBW    6            //every LED is addressed with its own RGBW (ledCount * 4 channels)
-#define DMX_MODE_SEGMENTS_RGB     7            //same as SINGEL RGB but then PER SEGMENT
+
+#define DMX_MODE_SEGMENTS_RGB     7            //all LEDs same RGB color (3 channels) / PER SEGMENT
+#define DMX_MODE_SEGMENTS_DRGB    8            //first channel master dimmer for full strip | all LEDs same RGB color (3 channels) / PER SEGMENT 
+#define DMX_MODE_SEGMENTS_RGBW    9            //all LEDs same RGBW color (4 channels) / PER SEGMENT 
+#define DMX_MODE_SEGMENTS_DRGBW   10           //first channel master dimmer for full strip | all LEDs same RGBW color (4 channels) / PER SEGMENT 
+#define DMX_MODE_SEGMENTS_EFFECT  11           //Per segment Trigger standalone effects of WLED (11/13 channels) + 1 channel to enable / disable the segment total 14 channels
+
+
 
 //Light capability byte (unused) 0bRCCCTTTT
 //bits 0/1/2/3: specifies a type of LED driver. A single "driver" may have different chip models but must have the same protocol/behavior
