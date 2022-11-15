@@ -260,14 +260,13 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
         }
         break;
       }
-    
+
     case DMX_MODE_SEGMENTS_RGBW:
     case DMX_MODE_SEGMENTS_DRGBW:
     case DMX_MODE_SEGMENTS_RGB:
-    case DMX_MODE_SEGMENTS_DRGB:   
+    case DMX_MODE_SEGMENTS_DRGB:
 
-      if (uni != e131Universe) return;  
-            
+      if (uni != e131Universe) return;              
       realtimeLock(realtimeTimeoutMs, mde);
       if (realtimeOverride && !(realtimeMode && useMainSegmentOnly)) return;
 
@@ -282,8 +281,10 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
         if(seg.isActive()){   
           seg.setOption(SEG_OPTION_SELECTED,true);  
           if ((DMXMode == DMX_MODE_SEGMENTS_RGBW) |  (DMXMode == DMX_MODE_SEGMENTS_DRGBW)){
+            if(availDMXLen - dmxPointer < 3) break;
             seg.fill(RGBW32(e131_data[dmxPointer+0], e131_data[dmxPointer+1], e131_data[dmxPointer+2],0));
           }else{
+            if(availDMXLen - dmxPointer < 4) break;
             seg.fill(RGBW32(e131_data[dmxPointer+0], e131_data[dmxPointer+1], e131_data[dmxPointer+2],e131_data[dmxPointer+3]));
           }
           seg.setOption(SEG_OPTION_SELECTED,false); 
@@ -296,8 +297,43 @@ void handleE131Packet(e131_packet_t* p, IPAddress clientIP, byte protocol){
       }
       break;
     
-    case DMX_MODE_SEGMENTS_EFFECT:  //TODO maybe by mx
-      DEBUG_PRINTLN(F("DMX_MODE_SEGMENTS_EFFECT TODO"));
+    case DMX_MODE_SEGMENTS_EFFECT:  
+      if (uni != e131Universe) return;
+      if(availDMXLen - dmxPointer < 1) break;
+      if (bri != e131_data[dmxPointer]) {
+        bri = e131_data[dmxPointer];
+      }
+      dmxPointer++;
+
+      for(segment & seg : strip._segments){
+        if(seg.isActive()){   
+          seg.setOption(SEG_OPTION_SELECTED,true);  
+          if(availDMXLen - dmxPointer < 10) break;
+          effectCurrent   = e131_data[dmxPointer+ 0];
+          effectSpeed     = e131_data[dmxPointer+ 1];  // flickers
+          effectIntensity = e131_data[dmxPointer+ 2];
+          effectPalette   = e131_data[dmxPointer+ 3];
+          col[0]          = e131_data[dmxPointer+ 4];
+          col[1]          = e131_data[dmxPointer+ 5];
+          col[2]          = e131_data[dmxPointer+ 6];
+          colSec[0]       = e131_data[dmxPointer+ 7];
+          colSec[1]       = e131_data[dmxPointer+ 8];
+          colSec[2]       = e131_data[dmxPointer+ 9];
+          if(availDMXLen - dmxPointer > 12){
+            col[3]          = e131_data[dmxPointer+10]; //white
+            colSec[3]       = e131_data[dmxPointer+11];
+          }
+          applyValuesToSelectedSegs();
+          seg.setOption(SEG_OPTION_SELECTED,false);
+        }
+        dmxPointer += 12;
+      }
+      //do the update
+      transitionDelayTemp = 0;               // act fast
+      stateUpdated(CALL_MODE_NOTIFICATION);  // only state update needed.
+      return;                                // don't activate realtime live mode
+      break;
+
     default:
       DEBUG_PRINTLN(F("unknown E1.31 DMX mode"));
       return;  // nothing to do
